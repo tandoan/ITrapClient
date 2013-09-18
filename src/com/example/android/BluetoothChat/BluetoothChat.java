@@ -59,7 +59,7 @@ public class BluetoothChat extends Activity {
     public static final int MESSAGE_WRITE = 3;
     public static final int MESSAGE_DEVICE_NAME = 4;
     public static final int MESSAGE_TOAST = 5;
-    public static final int MESSAGE_SENDING_IMAGE = 6;
+    public static final int MESSAGE_IMAGE_READ = 6;
 
     // Key names received from the BluetoothChatService Handler
     public static final String DEVICE_NAME = "device_name";
@@ -265,17 +265,7 @@ public class BluetoothChat extends Activity {
         @Override
         public void handleMessage(Message msg) {
         	//TODO: save pictures here?
-            switch (msg.what) {
-            case MESSAGE_SENDING_IMAGE:
-            	if(D) Log.i(TAG, "MESSAGE_SENDING_IMAGE");
-            	
-            	try{
-            		saveImage(msg.obj);
-            	} catch(Exception e) {
-            		
-            	}
-            	break;
-            	
+            switch (msg.what) {	
             case MESSAGE_STATE_CHANGE:
                 if(D) Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
                 switch (msg.arg1) {
