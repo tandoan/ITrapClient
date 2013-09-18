@@ -16,6 +16,7 @@
 
 package com.example.android.BluetoothChat;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -432,6 +433,8 @@ public class BluetoothChatService {
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
 
+        private final DataInputStream mmDataInStream;
+        
         public ConnectedThread(BluetoothSocket socket, String socketType) {
             Log.d(TAG, "create ConnectedThread: " + socketType);
             mmSocket = socket;
@@ -448,6 +451,8 @@ public class BluetoothChatService {
 
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
+            mmDataInStream = new DataInputStream(tmpIn);
+            
         }
 
         public void run() {
@@ -458,13 +463,26 @@ public class BluetoothChatService {
             // Keep listening to the InputStream while connected
             while (true) {
                 try {
-                    // Read from the InputStream
-                    bytes = mmInStream.read(buffer);
+// Read from the InputStream
+                	
+                	//get the name
+                	bytes = mmDataInStream.readInt();  
+                	byte[] nameInBytes = new byte[bytes];  
+                	
+                	
+                	mmDataInStream.readFully(nameInBytes);  
+                	String name = new String(nameInBytes, "UTF-8");  
+                	
+                	//get the file
+                	bytes = mmDataInStream.readInt();  
+                	byte[] contents = new byte[bytes];
+                	mmDataInStream.readFully(contents); 
+                	
+                	
 
                     // Send the obtained bytes to the UI Activity
-                    mHandler.obtainMessage(BluetoothChat.MESSAGE_READ, bytes, -1, buffer)
-                            .sendToTarget();
-                    
+                    mHandler.obtainMessage(BluetoothChat.MESSAGE_IMAGE_READ, bytes, -1, contents)
+                            .sendToTarget();                    
                     
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);

@@ -304,9 +304,17 @@ public class BluetoothChat extends Activity {
                 Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
                                Toast.LENGTH_SHORT).show();
                 break;
+                
+            case MESSAGE_IMAGE_READ:
+            	handleImageRead();
+            	break;
             }
         }
     };
+    
+    private void handleImageRead(){
+    	if(D) Log.d(TAG, "in image read");
+    }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(D) Log.d(TAG, "onActivityResult " + resultCode);
