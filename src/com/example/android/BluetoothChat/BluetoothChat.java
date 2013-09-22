@@ -317,8 +317,7 @@ public class BluetoothChat extends Activity {
                 
             case MESSAGE_IMAGE_READ:
             	
-            	//handleImageRead(msg.getData());
-            	if(D) Log.d(TAG, "FILE NAME IS: " + msg.getData().getString("FILE_NAME"));
+            	handleImageRead(msg.getData());
             	break;
             }
         }

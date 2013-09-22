@@ -480,7 +480,7 @@ public class BluetoothChatService {
                 	// Bundle the file and send it off
                 	Bundle tmpBundle = new Bundle();
                 	tmpBundle.putString("FILE_NAME", name);
-                	//tmpBundle.putByteArray("FILE_CONTENTS", contents);
+                	tmpBundle.putByteArray("FILE_CONTENTS", contents);
                 	
                 	// null out to save memory
                 	contents = null;
