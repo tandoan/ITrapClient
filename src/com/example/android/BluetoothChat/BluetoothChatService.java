@@ -32,6 +32,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+
+
 /**
  * This class does all the work for setting up and managing Bluetooth
  * connections with other devices. It has a thread that listens for
@@ -457,32 +459,38 @@ public class BluetoothChatService {
 
         public void run() {
             Log.i(TAG, "BEGIN mConnectedThread");
-            byte[] buffer = new byte[1024];
             int bytes;
 
             // Keep listening to the InputStream while connected
             while (true) {
                 try {
-// Read from the InputStream
+                	// Read from the InputStream
                 	
                 	//get the name
-                	bytes = mmDataInStream.readInt();  
-                	byte[] nameInBytes = new byte[bytes];  
-                	
-                	
-                	mmDataInStream.readFully(nameInBytes);  
+                	bytes = mmDataInStream.readInt(); 
+                   	byte[] nameInBytes = new byte[bytes];               	
+                   	mmDataInStream.read(nameInBytes, 0, bytes);
                 	String name = new String(nameInBytes, "UTF-8");  
                 	
                 	//get the file
                 	bytes = mmDataInStream.readInt();  
                 	byte[] contents = new byte[bytes];
-                	mmDataInStream.readFully(contents); 
+                	mmDataInStream.read(contents, 0, bytes); 
                 	
+                	// Bundle the file and send it off
+                	Bundle tmpBundle = new Bundle();
+                	tmpBundle.putString("FILE_NAME", name);
+                	//tmpBundle.putByteArray("FILE_CONTENTS", contents);
                 	
-
+                	// null out to save memory
+                	contents = null;
+                	name = null;
+                	nameInBytes = null;
+                	
                     // Send the obtained bytes to the UI Activity
-                    mHandler.obtainMessage(BluetoothChat.MESSAGE_IMAGE_READ, bytes, -1, contents)
-                            .sendToTarget();                    
+                	Message message = mHandler.obtainMessage(BluetoothChat.MESSAGE_IMAGE_READ);
+                	message.setData(tmpBundle);
+                	message.sendToTarget();
                     
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);

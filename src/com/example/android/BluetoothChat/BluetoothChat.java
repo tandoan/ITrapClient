@@ -17,17 +17,17 @@
 package com.example.android.BluetoothChat;
 
 import java.io.File;
+import java.io.FileOutputStream;
 
-import android.R.string;
 import android.app.ActionBar;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -248,7 +248,17 @@ public class BluetoothChat extends Activity {
         actionBar.setSubtitle(subTitle);
     }
     
+    /* Checks if external storage is available for read and write */
+    public boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+    
     private final void saveImage(Object messageObject) {
+    	
     	//String photoPath = messageObject.photoPath;
     	/* saves photo to the gallery so it is available to others */
     	/*
@@ -306,14 +316,53 @@ public class BluetoothChat extends Activity {
                 break;
                 
             case MESSAGE_IMAGE_READ:
-            	handleImageRead();
+            	
+            	//handleImageRead(msg.getData());
+            	if(D) Log.d(TAG, "FILE NAME IS: " + msg.getData().getString("FILE_NAME"));
             	break;
             }
         }
     };
     
-    private void handleImageRead(){
+    public File getAlbumStorageDir(String albumName) {
+        // Get the directory for the user's public pictures directory. 
+        File file = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES), albumName);
+        if (!file.mkdirs()) {
+            Log.d(TAG, "Directory not created");
+        }
+        return file;
+    }
+    
+    private void handleImageRead(Bundle bundle){
     	if(D) Log.d(TAG, "in image read");
+    	
+    	String fileName = bundle.getString("FILE_NAME");
+    	byte[] fileContents = bundle.getByteArray("FILE_CONTENTS");
+    	//FileOutputStream outputStream;
+
+    	if(D) Log.d(TAG, "FILE NAME: " + fileName);
+    	// save to internal storage
+/*
+    	try {
+    	  outputStream = openFileOutput(fileName, Context.MODE_PRIVATE);
+    	  outputStream.write(fileContents);
+    	  outputStream.close();
+    	} catch (Exception e) {
+    	  e.printStackTrace();
+    	}
+    	
+    	//save to media gallery
+    	Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+    	File myFile = new File(getApplicationContext().getFilesDir(), fileName);
+        Uri contentUri = Uri.fromFile(myFile);
+        mediaScanIntent.setData(contentUri);
+        this.sendBroadcast(mediaScanIntent);
+    	
+        //TODO: race condition.  need to delete after it's sure its been written
+    	//delete from internal storage
+    	myFile.delete();
+  */  	
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
