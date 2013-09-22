@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.BluetoothChat;
+package com.example.android.BluetoothImageSaveClient;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -40,9 +40,9 @@ import android.util.Log;
  * incoming connections, a thread for connecting with a device, and a
  * thread for performing data transmissions when connected.
  */
-public class BluetoothChatService {
+public class BluetoothImageSaveClientService {
     // Debugging
-    private static final String TAG = "BluetoothChatService";
+    private static final String TAG = "BluetoothImageSaveClientService";
     private static final boolean D = true;
 
     // Name for the SDP record when creating server socket
@@ -78,11 +78,11 @@ public class BluetoothChatService {
     public static final int STATE_CONNECTED = 3;  // now connected to a remote device
 
     /**
-     * Constructor. Prepares a new BluetoothChat session.
+     * Constructor. Prepares a new BluetoothImageSaveClient session.
      * @param context  The UI Activity Context
      * @param handler  A Handler to send messages back to the UI Activity
      */
-    public BluetoothChatService(Context context, Handler handler) {
+    public BluetoothImageSaveClientService(Context context, Handler handler) {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mState = STATE_NONE;
         mHandler = handler;
@@ -97,7 +97,7 @@ public class BluetoothChatService {
         mState = state;
 
         // Give the new state to the Handler so the UI Activity can update
-        mHandler.obtainMessage(BluetoothChat.MESSAGE_STATE_CHANGE, state, -1).sendToTarget();
+        mHandler.obtainMessage(BluetoothImageSaveClient.MESSAGE_STATE_CHANGE, state, -1).sendToTarget();
     }
 
     /**
@@ -183,9 +183,9 @@ public class BluetoothChatService {
         mConnectedThread.start();
 
         // Send the name of the connected device back to the UI Activity
-        Message msg = mHandler.obtainMessage(BluetoothChat.MESSAGE_DEVICE_NAME);
+        Message msg = mHandler.obtainMessage(BluetoothImageSaveClient.MESSAGE_DEVICE_NAME);
         Bundle bundle = new Bundle();
-        bundle.putString(BluetoothChat.DEVICE_NAME, device.getName());
+        bundle.putString(BluetoothImageSaveClient.DEVICE_NAME, device.getName());
         msg.setData(bundle);
         mHandler.sendMessage(msg);
 
@@ -242,14 +242,14 @@ public class BluetoothChatService {
      */
     private void connectionFailed() {
         // Send a failure message back to the Activity
-        Message msg = mHandler.obtainMessage(BluetoothChat.MESSAGE_TOAST);
+        Message msg = mHandler.obtainMessage(BluetoothImageSaveClient.MESSAGE_TOAST);
         Bundle bundle = new Bundle();
-        bundle.putString(BluetoothChat.TOAST, "Unable to connect device");
+        bundle.putString(BluetoothImageSaveClient.TOAST, "Unable to connect device");
         msg.setData(bundle);
         mHandler.sendMessage(msg);
 
         // Start the service over to restart listening mode
-        BluetoothChatService.this.start();
+        BluetoothImageSaveClientService.this.start();
     }
 
     /**
@@ -257,14 +257,14 @@ public class BluetoothChatService {
      */
     private void connectionLost() {
         // Send a failure message back to the Activity
-        Message msg = mHandler.obtainMessage(BluetoothChat.MESSAGE_TOAST);
+        Message msg = mHandler.obtainMessage(BluetoothImageSaveClient.MESSAGE_TOAST);
         Bundle bundle = new Bundle();
-        bundle.putString(BluetoothChat.TOAST, "Device connection was lost");
+        bundle.putString(BluetoothImageSaveClient.TOAST, "Device connection was lost");
         msg.setData(bundle);
         mHandler.sendMessage(msg);
 
         // Start the service over to restart listening mode
-        BluetoothChatService.this.start();
+        BluetoothImageSaveClientService.this.start();
     }
 
     /**
@@ -316,7 +316,7 @@ public class BluetoothChatService {
 
                 // If a connection was accepted
                 if (socket != null) {
-                    synchronized (BluetoothChatService.this) {
+                    synchronized (BluetoothImageSaveClientService.this) {
                         switch (mState) {
                         case STATE_LISTEN:
                         case STATE_CONNECTING:
@@ -409,7 +409,7 @@ public class BluetoothChatService {
             }
 
             // Reset the ConnectThread because we're done
-            synchronized (BluetoothChatService.this) {
+            synchronized (BluetoothImageSaveClientService.this) {
                 mConnectThread = null;
             }
 
@@ -488,15 +488,16 @@ public class BluetoothChatService {
                 	nameInBytes = null;
                 	
                     // Send the obtained bytes to the UI Activity
-                	Message message = mHandler.obtainMessage(BluetoothChat.MESSAGE_IMAGE_READ);
+                	Message message = mHandler.obtainMessage(BluetoothImageSaveClient.MESSAGE_IMAGE_READ);
                 	message.setData(tmpBundle);
                 	message.sendToTarget();
+                	message = null;
                     
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
                     connectionLost();
                     // Start the service over to restart listening mode
-                    BluetoothChatService.this.start();
+                    BluetoothImageSaveClientService.this.start();
                     break;
                 }
             }
@@ -511,7 +512,7 @@ public class BluetoothChatService {
                 mmOutStream.write(buffer);
 
                 // Share the sent message back to the UI Activity
-                mHandler.obtainMessage(BluetoothChat.MESSAGE_WRITE, -1, -1, buffer)
+                mHandler.obtainMessage(BluetoothImageSaveClient.MESSAGE_WRITE, -1, -1, buffer)
                         .sendToTarget();
             } catch (IOException e) {
                 Log.e(TAG, "Exception during write", e);
