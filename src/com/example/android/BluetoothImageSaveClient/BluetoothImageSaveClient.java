@@ -306,7 +306,7 @@ public class BluetoothImageSaveClient extends Activity {
                 
             case MESSAGE_IMAGE_READ:
             	
-            	handleImageRead(msg.getData());
+            	//handleImageRead(msg.getData());
             	break;
             }
         }
@@ -331,14 +331,7 @@ public class BluetoothImageSaveClient extends Activity {
 
     	if(D) Log.d(TAG, "FILE NAME: " + fileName);
     	// save to internal storage
-/*
-    	try {
-    	  outputStream = openFileOutput(fileName, Context.MODE_PRIVATE);
-    	  outputStream.write(fileContents);
-    	  outputStream.close();
-    	} catch (Exception e) {
-    	  e.printStackTrace();
-    	}
+
     	
     	//save to media gallery
     	Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
@@ -350,7 +343,7 @@ public class BluetoothImageSaveClient extends Activity {
         //TODO: race condition.  need to delete after it's sure its been written
     	//delete from internal storage
     	myFile.delete();
-  */  	
+ 	
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {

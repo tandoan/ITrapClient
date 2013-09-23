@@ -17,6 +17,8 @@
 package com.example.android.BluetoothImageSaveClient;
 
 import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -27,7 +29,10 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -70,6 +75,8 @@ public class BluetoothImageSaveClientService {
     private ConnectThread mConnectThread;
     private ConnectedThread mConnectedThread;
     private int mState;
+    private final Context mContext;
+
 
     // Constants that indicate the current connection state
     public static final int STATE_NONE = 0;       // we're doing nothing
@@ -86,6 +93,7 @@ public class BluetoothImageSaveClientService {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mState = STATE_NONE;
         mHandler = handler;
+        mContext = context;
     }
 
     /**
@@ -457,6 +465,16 @@ public class BluetoothImageSaveClientService {
             
         }
 
+        public File getAlbumStorageDir(String albumName) {
+            // Get the directory for the user's public pictures directory. 
+            File file = new File(Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_PICTURES), albumName);
+            if (!file.mkdirs()) {
+                Log.e(TAG, "Directory not created");
+            }
+            return file;
+        }
+        
         public void run() {
             Log.i(TAG, "BEGIN mConnectedThread");
             int bytes;
@@ -473,25 +491,40 @@ public class BluetoothImageSaveClientService {
                 	String name = new String(nameInBytes, "UTF-8");  
                 	
                 	//get the file
-                	bytes = mmDataInStream.readInt();  
-                	byte[] contents = new byte[bytes];
-                	mmDataInStream.read(contents, 0, bytes); 
+                	bytes = mmDataInStream.readInt();
+                	int counter = bytes;
                 	
-                	// Bundle the file and send it off
-                	Bundle tmpBundle = new Bundle();
-                	tmpBundle.putString("FILE_NAME", name);
-                	tmpBundle.putByteArray("FILE_CONTENTS", contents);
+                	byte[] buffer = new byte[1024];
+                	int readAmount = 1024;
                 	
-                	// null out to save memory
-                	contents = null;
-                	name = null;
-                	nameInBytes = null;
+                	File albumStorageDir = getAlbumStorageDir("TRAPS");
+                	String fullPath = albumStorageDir.toString() + File.separatorChar+name;
+                	FileOutputStream outputStream = new FileOutputStream(new File(fullPath), true);
                 	
-                    // Send the obtained bytes to the UI Activity
-                	Message message = mHandler.obtainMessage(BluetoothImageSaveClient.MESSAGE_IMAGE_READ);
-                	message.setData(tmpBundle);
-                	message.sendToTarget();
-                	message = null;
+                	//outputStream = mContext.openFileOutput(name, Context.MODE_APPEND);
+                	
+                	//read and then write the stream directly to the 
+                	while(counter > 0) {
+                		Log.d(TAG, "reading bytes");
+                		if(counter < 1024) {
+                			readAmount = 1024 - counter;
+                		}
+                		mmDataInStream.read(buffer, 0, readAmount);
+                		outputStream.write(buffer, 0, readAmount);
+                		counter -= readAmount;
+                	}
+                	outputStream.flush();
+                	outputStream.close();
+                	Log.d(TAG, "file written");
+                	
+                	Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                    File f = new File(fullPath);
+                    Uri contentUri = Uri.fromFile(f);
+                    mediaScanIntent.setData(contentUri);
+                    mContext.sendBroadcast(mediaScanIntent);
+                    
+                    Log.d(TAG, "intent sent");
+           
                     
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
