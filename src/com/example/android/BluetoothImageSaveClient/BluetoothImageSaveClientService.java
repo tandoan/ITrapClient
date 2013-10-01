@@ -37,6 +37,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import com.example.TrapProtocol.TrapProtocolClient;
+
 
 
 /**
@@ -477,62 +479,16 @@ public class BluetoothImageSaveClientService {
         
         public void run() {
             Log.i(TAG, "BEGIN mConnectedThread");
-            int bytes;
-
-            // Keep listening to the InputStream while connected
-            while (true) {
-                try {
-                	// Read from the InputStream
-                	
-                	//get the name
-                	bytes = mmDataInStream.readInt(); 
-                   	byte[] nameInBytes = new byte[bytes];               	
-                   	mmDataInStream.read(nameInBytes, 0, bytes);
-                	String name = new String(nameInBytes, "UTF-8");  
-                	
-                	//get the file
-                	bytes = mmDataInStream.readInt();
-                	int counter = bytes;
-                	
-                	byte[] buffer = new byte[1024];
-                	int readAmount = 1024;
-                	
-                	File albumStorageDir = getAlbumStorageDir("TRAPS");
-                	String fullPath = albumStorageDir.toString() + File.separatorChar+name;
-                	FileOutputStream outputStream = new FileOutputStream(new File(fullPath), true);
-                	
-                	//outputStream = mContext.openFileOutput(name, Context.MODE_APPEND);
-                	
-                	//read and then write the stream directly to the 
-                	while(counter > 0) {
-                		Log.d(TAG, "reading bytes");
-                		if(counter < 1024) {
-                			readAmount = 1024 - counter;
-                		}
-                		mmDataInStream.read(buffer, 0, readAmount);
-                		outputStream.write(buffer, 0, readAmount);
-                		counter -= readAmount;
-                	}
-                	outputStream.flush();
-                	outputStream.close();
-                	Log.d(TAG, "file written");
-                	
-                	Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                    File f = new File(fullPath);
-                    Uri contentUri = Uri.fromFile(f);
-                    mediaScanIntent.setData(contentUri);
-                    mContext.sendBroadcast(mediaScanIntent);
-                    
-                    Log.d(TAG, "intent sent");
-           
-                    
-                } catch (IOException e) {
-                    Log.e(TAG, "disconnected", e);
-                    connectionLost();
-                    // Start the service over to restart listening mode
-                    BluetoothImageSaveClientService.this.start();
-                    break;
-                }
+            
+            try {
+            	File albumStorageDir = getAlbumStorageDir("TRAPS");
+            	TrapProtocolClient trapProtocolClient= new TrapProtocolClient(mmDataInStream, mmOutStream, mContext,albumStorageDir);
+            	trapProtocolClient.run();
+            } catch (IOException e) {
+            	Log.e(TAG, "disconnected", e);
+            	connectionLost();
+            	// Start the service over to restart listening mode
+            	BluetoothImageSaveClientService.this.start();
             }
         }
 
